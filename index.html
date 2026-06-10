@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSY Projects — Fixture Intelligence</title>
+<style>
+:root{--navy:#002060;--teal:#1a6b6b;--gold:#b8860b;--green:#2D7A4F;--red:#A03030;--bg:#f4f6fa;--border:#dce3ef;--text:#1a1a2e;--muted:#6b7a99;--hs:#1a5c8a;--um:#1a6b3a;--km:#7a4a1a;--cp:#4a1a6b;--fail:#8a1a1a;--rumor:#6b6b1a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;}
+header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.wordmark{font-size:22px;font-weight:700;letter-spacing:.18em;margin-right:16px;border-right:2px solid rgba(255,255,255,.25);padding-right:16px;}
+h1{font-size:14px;font-weight:700;letter-spacing:.05em;}
+.sync-status{font-size:11px;opacity:.7;}
+.stats{display:flex;gap:10px;padding:8px 20px;background:var(--navy);}
+.stat{background:rgba(255,255,255,.12);border-radius:4px;padding:5px 14px;color:#fff;text-align:center;}
+.stat-n{font-size:17px;font-weight:700;}.stat-l{font-size:10px;opacity:.7;margin-top:1px;}
+.toolbar{display:flex;gap:8px;padding:10px 20px;background:#fff;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+.toolbar input,.toolbar select{padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);color:var(--text);}
+.toolbar input{width:200px;}
+.btn{padding:6px 14px;border-radius:4px;border:none;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-primary{background:var(--navy);color:#fff;}.btn-secondary{background:var(--bg);color:var(--navy);border:1px solid var(--border);}
+.btn-parse{background:var(--teal);color:#fff;}.btn-danger{background:var(--red);color:#fff;}.btn-sm{padding:3px 8px;font-size:11px;}
+.save-status{font-size:11px;color:var(--green);margin-left:auto;}
+.parse-panel{background:#fff;border-bottom:1px solid var(--border);padding:10px 20px;display:none;}
+.parse-panel.open{display:block;}
+.parse-panel textarea{width:100%;min-height:70px;padding:7px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-bottom:6px;resize:vertical;}
+.parse-info{font-size:11px;color:var(--muted);font-style:italic;margin-left:8px;}
+.table-wrap{padding:14px 20px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);font-size:12px;}
+thead tr{background:var(--navy);color:#fff;}
+th{padding:9px 10px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.04em;white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{background:rgba(255,255,255,.1);}
+th.sorted .si{opacity:1;}.si{margin-left:3px;font-size:10px;opacity:.4;}
+tbody tr{border-bottom:1px solid var(--border);}tbody tr:hover{background:#f0f4fb;}
+td{padding:7px 10px;vertical-align:top;line-height:1.4;}
+.oc{font-weight:600;color:var(--navy);}.rc{font-size:11px;color:var(--muted);font-style:italic;max-width:200px;}
+.tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;color:#fff;margin:1px 1px 1px 0;white-space:nowrap;}
+.tag-hs{background:var(--hs)}.tag-um{background:var(--um)}.tag-km{background:var(--km)}.tag-cp{background:var(--cp)}
+.tag-fail{background:var(--fail)}.tag-rumor{background:var(--rumor)}.tag-fixed{background:var(--green)}
+.tag-ssy{background:var(--gold)}.tag-pnc{background:#555}
+.ac{display:flex;gap:4px;}.empty{text-align:center;color:var(--muted);padding:30px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,40,.5);z-index:100;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:#fff;border-radius:8px;padding:22px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+.modal h2{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.ff{grid-column:1/-1;}
+label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;}
+input[type=text],select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-size:12px;color:var(--text);}
+textarea{min-height:55px;resize:vertical;}
+.fa{display:flex;gap:8px;margin-top:14px;justify-content:flex-end;}
+.po{display:none;position:fixed;inset:0;background:#fff;z-index:200;overflow:auto;padding:20px;}
+.po.open{display:block;}
+.ptb{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+.ptb span{font-size:11px;color:#666;}
+@media print{.ptb{display:none!important;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;">
+    <span class="wordmark">SSY</span>
+    <h1>PROJECTS — FIXTURE INTELLIGENCE</h1>
+  </div>
+  <span class="sync-status" id="syncStatus">Connecting…</span>
+</header>
+<div class="stats" id="stats"></div>
+
+<div class="toolbar">
+  <input type="text" id="qSearch" placeholder="Search owner, charterer, vessel…" oninput="render()">
+  <select id="qType" onchange="render()">
+    <option value="">All vessel types</option>
+    <option>Handysize</option><option>Ultramax</option><option>Kamsarmax</option><option>Capesize</option>
+  </select>
+  <select id="qStatus" onchange="render()">
+    <option value="">All statuses</option>
+    <option>Fixed</option><option>Failed</option><option>Rumored</option>
+  </select>
+  <select id="qSSY" onchange="render()">
+    <option value="">All fixtures</option>
+    <option value="1">SSY only</option>
+  </select>
+  <button class="btn btn-secondary" onclick="showPrint()">🖨 Print View</button>
+  <button class="btn btn-secondary" onclick="loadFromBin()">↻ Refresh</button>
+  <button class="btn btn-parse" onclick="toggleParse()">⚡ AI Parse</button>
+  <button class="btn btn-primary" onclick="openAdd()">+ Add Entry</button>
+  <span class="save-status" id="saveStatus"></span>
+</div>
+
+<div class="parse-panel" id="parsePanel">
+  <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Paste raw fixture text — Claude will extract structured entries:</label>
+  <textarea id="parseInput" placeholder="e.g. Owners: XYZ Kisen – Newbuilding TESS64 | Delivery 2H 2027 | Fixed to ABC at USD 15,000 for 5 years…"></textarea>
+  <div style="display:flex;align-items:center;">
+    <button class="btn btn-parse" onclick="runParse()">Parse with AI</button>
+    <span class="parse-info" id="parseStatus"></span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th onclick="sortBy('status')" id="th-status">STATUS<span class="si">↕</span></th>
+      <th onclick="sortBy('reported')" id="th-reported">REPORTED<span class="si">↕</span></th>
+      <th onclick="sortBy('type')" id="th-type">TYPE<span class="si">↕</span></th>
+      <th onclick="sortBy('owner')" id="th-owner">OWNER<span class="si">↕</span></th>
+      <th onclick="sortBy('vessel')" id="th-vessel">VESSEL<span class="si">↕</span></th>
+      <th onclick="sortBy('delivery')" id="th-delivery">DELIVERY<span class="si">↕</span></th>
+      <th onclick="sortBy('charterer')" id="th-charterer">CHARTERER<span class="si">↕</span></th>
+      <th onclick="sortBy('rate')" id="th-rate">RATE<span class="si">↕</span></th>
+      <th onclick="sortBy('period')" id="th-period">PERIOD<span class="si">↕</span></th>
+      <th>FLAGS</th>
+      <th>REMARKS</th>
+      <th></th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- Print overlay -->
+<div class="po" id="po">
+  <div class="ptb">
+    <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save as PDF</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('po').classList.remove('open')">✕ Back</button>
+    <span>Tick <strong>Background graphics</strong> in the print dialog to keep colours.</span>
+  </div>
+  <div id="pc"></div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h2 id="mTitle">Add Entry</h2>
+    <div class="fg">
+      <div><label>Owner</label><input type="text" id="f_owner"></div>
+      <div><label>Vessel Type</label><select id="f_type"><option>Handysize</option><option>Ultramax</option><option>Kamsarmax</option><option>Capesize</option></select></div>
+      <div><label>Vessel Spec</label><input type="text" id="f_vessel"></div>
+      <div><label>Delivery</label><input type="text" id="f_delivery"></div>
+      <div><label>Charterer</label><input type="text" id="f_charterer"></div>
+      <div><label>Rate</label><input type="text" id="f_rate"></div>
+      <div><label>Period</label><input type="text" id="f_period"></div>
+      <div><label>Reported</label><input type="text" id="f_reported"></div>
+      <div><label>Status</label><select id="f_status"><option>Fixed</option><option>Failed</option><option>Rumored</option></select></div>
+      <div><label>SSY Fixture?</label><select id="f_ssy"><option value="0">No</option><option value="1">Yes</option></select></div>
+      <div><label>PNC?</label><select id="f_pnc"><option value="0">No</option><option value="1">Yes</option></select></div>
+      <div><label>Broker / Via</label><input type="text" id="f_broker"></div>
+      <div class="ff"><label>Remarks</label><textarea id="f_remarks"></textarea></div>
+    </div>
+    <div class="fa">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BIN_ID = '6a292fd3f5f4af5e29d71fdf';
+const API_KEY = '$2a$10$QJtGabSFUB6ONGAumRWBX.scFSAxwpvjl87ngnljyEVLaI01AeHUu';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+const TCSS = {Handysize:'hs',Ultramax:'um',Kamsarmax:'km',Capesize:'cp'};
+const TORD = {Handysize:1,Ultramax:2,Kamsarmax:3,Capesize:4};
+const TC   = {Handysize:'#1a5c8a',Ultramax:'#1a6b3a',Kamsarmax:'#7a4a1a',Capesize:'#4a1a6b'};
+const SC   = {Fixed:'#2D7A4F',Failed:'#8a1a1a',Rumored:'#6b6b1a'};
+
+const SEED = [
+  {id:1,owner:"Soki Kisen",vessel:"Imabari-40",type:"Handysize",delivery:"1H 2027",charterer:"DryDel",rate:"USD 14,000 nett",period:"5 years",reported:"April 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
+  {id:2,owner:"Fujimaru Kaiun",vessel:"Imabari-40",type:"Handysize",delivery:"1H 2028",charterer:"DryDel",rate:"USD 13,950 nett",period:"5 years",reported:"May 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
+  {id:3,owner:"Nissen",vessel:"JNS-40 (×11)",type:"Handysize",delivery:"4Q 2029 onwards",charterer:"Daiichi",rate:"",period:"Long term",reported:"May 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:"Left pocket right pocket — Nissen is a part shareholder of Daiichi."},
+  {id:4,owner:"Sugahara Kaiun",vessel:"Onomichi 40K",type:"Handysize",delivery:"2H 2028",charterer:"United Overseas Trading (UOT)",rate:"USD 13,850 nett",period:"3+1+1 years",reported:"May 2026",status:"Fixed",ssy:true,pnc:true,broker:"SSY",remarks:"Top PNC — SSY fixture, c/p details still being finalised."},
+  {id:5,owner:"Kyowa Sansho",vessel:"Onomichi 40",type:"Handysize",delivery:"2H 2029",charterer:"DryDel Shipping",rate:"USD 13,800 nett",period:"5+1+1 years",reported:"April 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
+  {id:6,owner:"Shikishima Kisen",vessel:"TESS64",type:"Ultramax",delivery:"1H 2029",charterer:"Aquavita",rate:"USD 15,000 nett",period:"5+1+1 years",reported:"May 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
+  {id:7,owner:"Shikishima Kisen",vessel:"Imabari-64",type:"Ultramax",delivery:"2H 2029",charterer:"Delia",rate:"USD 15,300 nett",period:"5+1+1 years",reported:"April 2026",status:"Fixed",ssy:true,pnc:false,broker:"SSY+SOMEC",remarks:"Brokerage USD 300/day to be shared with SOMEC."},
+  {id:8,owner:"Fujimaru Kaiun",vessel:"Imabari-64",type:"Ultramax",delivery:"2H 2027",charterer:"Chemikalien Seetransport (CST)",rate:"~USD 15,000 nett",period:"5 years",reported:"May 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
+  {id:9,owner:"Tachibana Kaiun",vessel:"Imabari-64",type:"Ultramax",delivery:"1H 2029",charterer:"M/Maritime",rate:"Low USD 15,000",period:"5 years",reported:"May 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:"Unverified — needs to be confirmed."},
+  {id:10,owner:"Grand Blue Shipping (Noma)",vessel:"JNS-64",type:"Ultramax",delivery:"1H 2027",charterer:"Pacific Basin",rate:"USD 14,300 nett",period:"5+1+1+1 years",reported:"April 2026",status:"Fixed",ssy:false,pnc:false,broker:"Marubeni",remarks:"Deal carries purchase options."},
+  {id:11,owner:"Grand Blue Shipping (Noma)",vessel:"JNS-64",type:"Ultramax",delivery:"2H 2027",charterer:"DryDel",rate:"USD 12,500/16,500 nett (flr/ceil)",period:"5+1+1 years",reported:"April 2026",status:"Fixed",ssy:false,pnc:false,broker:"Marubeni",remarks:""},
+  {id:12,owner:"Grand Blue Shipping (Noma)",vessel:"JNS-64",type:"Ultramax",delivery:"2H 2028",charterer:"Hudson",rate:"USD 12,000/17,000 nett (flr/ceil)",period:"3+1 yrs + evergreen",reported:"April 2026",status:"Fixed",ssy:true,pnc:true,broker:"SSY",remarks:"Top PNC — SSY fixture."},
+  {id:13,owner:"Kyowa Sansho",vessel:"NACKS 82",type:"Kamsarmax",delivery:"2H 2029",charterer:"Bunge",rate:"USD 14,900 nett",period:"5+1+1 years",reported:"April 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
+  {id:14,owner:"Fukujin Kisen",vessel:"Sanoyas 82",type:"Kamsarmax",delivery:"November 2026",charterer:"Comerge",rate:"USD 15,600 nett",period:"7+1+1 years",reported:"April 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
+  {id:15,owner:"DryDel / Daido JV",vessel:"182K Namura Cape (scrubber)",type:"Capesize",delivery:"2H 2028",charterer:"EGPN",rate:"~USD 31,000/day (indication)",period:"5 years",reported:"",status:"Rumored",ssy:false,pnc:true,broker:"",remarks:"Strictly PNC. Claimed seen above USD 30,000 from other names."},
+  {id:16,owner:"Kyowa Sansho",vessel:"Onomichi 40",type:"Handysize",delivery:"2H 2029",charterer:"J Lauritzen",rate:"USD 13,500 nett",period:"5+1+1 years",reported:"April 2026",status:"Failed",ssy:false,pnc:false,broker:"",remarks:"Failed — included purchase options."},
+  {id:17,owner:"Sugahara Kaiun",vessel:"Onomichi 40K",type:"Handysize",delivery:"2H 2028",charterer:"M/Maritime",rate:"USD 13,500",period:"5 years",reported:"",status:"Rumored",ssy:false,pnc:false,broker:"",remarks:"M/Maritime bid — lost out to SSY/UOT deal."},
+];
+
+let data = [], nextId = 200, sortCol = 'type', sortDir = 1, editId = null;
+
+// ── JSONBin API ───────────────────────────────────────────────────────────────
+async function loadFromBin() {
+  setSync('Loading…');
+  try {
+    // GET uses no auth since bin is public
+    const r = await fetch(BIN_URL + '/latest', {
+      method: 'GET',
+      headers: { 'X-Bin-Meta': 'false' }
+    });
+    if (!r.ok) throw new Error('GET failed: ' + r.status);
+    const j = await r.json();
+    if (j && j.entries && j.entries.length > 0) {
+      data = j.entries;
+      nextId = j.nextId || 200;
+    } else {
+      data = JSON.parse(JSON.stringify(SEED));
+      nextId = 200;
+      await saveToBin();
+    }
+    setSync('✓ Synced ' + new Date().toLocaleTimeString());
+    render();
+  } catch(e) {
+    setSync('⚠ ' + e.message);
+    data = JSON.parse(JSON.stringify(SEED));
+    render();
+  }
+}
+
+async function saveToBin() {
+  setSync('Saving…');
+  try {
+    const r = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify({ entries: data, nextId })
+    });
+    if (!r.ok) throw new Error('PUT failed: ' + r.status);
+    const el = document.getElementById('saveStatus');
+    el.textContent = '✓ Saved & synced';
+    setTimeout(() => el.textContent = '', 3000);
+    setSync('✓ Synced ' + new Date().toLocaleTimeString());
+  } catch(e) {
+    setSync('⚠ ' + e.message);
+  }
+}
+
+function setSync(msg) {
+  document.getElementById('syncStatus').textContent = msg;
+}
+
+// ── Sort helpers ──────────────────────────────────────────────────────────────
+function dKey(s) {
+  if (!s) return 999999;
+  const mo={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+  const l=s.toLowerCase(), y=(l.match(/\d{4}/)||['9999'])[0]*1;
+  if(/1h/.test(l))return y*100+1; if(/2h/.test(l))return y*100+2;
+  if(/1q/.test(l))return y*100+1; if(/2q/.test(l))return y*100+4;
+  if(/3q/.test(l))return y*100+7; if(/4q/.test(l))return y*100+10;
+  for(const[n,v]of Object.entries(mo))if(l.includes(n))return y*100+v;
+  return y*100;
+}
+function rKey(s) {
+  if (!s) return 999999;
+  const mo={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+  const l=s.toLowerCase(), y=(l.match(/\d{4}/)||['9999'])[0]*1;
+  const m=Object.entries(mo).find(([n])=>l.includes(n));
+  return y*100+(m?m[1]:0);
+}
+function gv(e,col) {
+  if(col==='type')return TORD[e.type]||9;
+  if(col==='delivery')return dKey(e.delivery);
+  if(col==='reported')return rKey(e.reported);
+  if(col==='status')return{Fixed:1,Rumored:2,Failed:3}[e.status]||9;
+  return(e[col]||'').toLowerCase();
+}
+function sortBy(col) {
+  sortDir = sortCol===col ? -sortDir : 1; sortCol = col;
+  document.querySelectorAll('th').forEach(t=>{t.classList.remove('sorted');const s=t.querySelector('.si');if(s)s.textContent='↕';});
+  const th=document.getElementById('th-'+col);
+  if(th){th.classList.add('sorted');th.querySelector('.si').textContent=sortDir===1?'↑':'↓';}
+  render();
+}
+
+// ── Filter & Render ───────────────────────────────────────────────────────────
+function filtered() {
+  const q=document.getElementById('qSearch').value.toLowerCase();
+  const t=document.getElementById('qType').value;
+  const s=document.getElementById('qStatus').value;
+  const sy=document.getElementById('qSSY').value;
+  return data.filter(e=>{
+    if(t&&e.type!==t)return false;
+    if(s&&e.status!==s)return false;
+    if(sy==='1'&&!e.ssy)return false;
+    if(q&&!`${e.owner} ${e.charterer} ${e.vessel} ${e.remarks} ${e.rate}`.toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function x(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function render() {
+  const rows=filtered().sort((a,b)=>{
+    const av=gv(a,sortCol),bv=gv(b,sortCol);
+    if(av<bv)return -sortDir; if(av>bv)return sortDir;
+    return dKey(a.delivery)-dKey(b.delivery);
+  });
+  const scMap={Fixed:'tag-fixed',Failed:'tag-fail',Rumored:'tag-rumor'};
+  const tbody=document.getElementById('tbody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="12" class="empty">No entries match your filters.</td></tr>';updateStats();return;}
+  tbody.innerHTML=rows.map(e=>{
+    const tc=TCSS[e.type]||'hs';
+    const flags=(e.ssy?'<span class="tag tag-ssy">SSY</span>':'')+(e.pnc?'<span class="tag tag-pnc">PNC</span>':'');
+    const rem=x(e.remarks)+(e.broker?`<br><span style="color:var(--teal);font-style:normal;">via ${x(e.broker)}</span>`:'');
+    return `<tr>
+      <td><span class="tag ${scMap[e.status]||''}">${e.status}</span></td>
+      <td style="white-space:nowrap;">${x(e.reported)}</td>
+      <td><span class="tag tag-${tc}">${e.type}</span></td>
+      <td class="oc">${x(e.owner)}</td>
+      <td>${x(e.vessel)}</td>
+      <td style="white-space:nowrap;">${x(e.delivery)}</td>
+      <td>${x(e.charterer)}</td>
+      <td style="font-weight:600;white-space:nowrap;">${x(e.rate)}</td>
+      <td style="white-space:nowrap;">${x(e.period)}</td>
+      <td>${flags}</td>
+      <td class="rc">${rem}</td>
+      <td><div class="ac">
+        <button class="btn btn-secondary btn-sm" onclick="openEdit(${e.id})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="del(${e.id},this)">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  updateStats();
+}
+function updateStats() {
+  const c={t:data.length,f:0,x:0,r:0,s:0};
+  data.forEach(e=>{if(e.status==='Fixed')c.f++;if(e.status==='Failed')c.x++;if(e.status==='Rumored')c.r++;if(e.ssy)c.s++;});
+  document.getElementById('stats').innerHTML=
+    [['Total',c.t],['Fixed',c.f],['Failed',c.x],['Rumored/Bids',c.r],['SSY Fixtures',c.s]]
+    .map(([l,n])=>`<div class="stat"><div class="stat-n">${n}</div><div class="stat-l">${l}</div></div>`).join('');
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────────────────
+function del(id,btn) {
+  if(btn.dataset.c==='1'){data=data.filter(e=>e.id!==id);saveToBin();render();}
+  else{btn.textContent='Confirm?';btn.dataset.c='1';setTimeout(()=>{btn.textContent='Delete';btn.dataset.c='';},3000);}
+}
+function openAdd() {
+  editId=null;document.getElementById('mTitle').textContent='Add Entry';
+  ['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value='');
+  document.getElementById('f_type').value='Handysize';
+  document.getElementById('f_status').value='Fixed';
+  document.getElementById('f_ssy').value='0';
+  document.getElementById('f_pnc').value='0';
+  document.getElementById('modal').classList.add('open');
+}
+function openEdit(id) {
+  const e=data.find(d=>d.id===id);if(!e)return;
+  editId=id;document.getElementById('mTitle').textContent='Edit Entry';
+  ['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value=e[f]||'');
+  document.getElementById('f_type').value=e.type;
+  document.getElementById('f_status').value=e.status;
+  document.getElementById('f_ssy').value=e.ssy?'1':'0';
+  document.getElementById('f_pnc').value=e.pnc?'1':'0';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function saveEntry() {
+  const e={
+    id:editId||nextId++,
+    owner:document.getElementById('f_owner').value.trim(),
+    vessel:document.getElementById('f_vessel').value.trim(),
+    type:document.getElementById('f_type').value,
+    delivery:document.getElementById('f_delivery').value.trim(),
+    charterer:document.getElementById('f_charterer').value.trim(),
+    rate:document.getElementById('f_rate').value.trim(),
+    period:document.getElementById('f_period').value.trim(),
+    reported:document.getElementById('f_reported').value.trim(),
+    status:document.getElementById('f_status').value,
+    ssy:document.getElementById('f_ssy').value==='1',
+    pnc:document.getElementById('f_pnc').value==='1',
+    broker:document.getElementById('f_broker').value.trim(),
+    remarks:document.getElementById('f_remarks').value.trim(),
+  };
+  if(editId){const i=data.findIndex(d=>d.id===editId);if(i>-1)data[i]=e;}else data.push(e);
+  closeModal();saveToBin();render();
+}
+
+// ── AI Parse ──────────────────────────────────────────────────────────────────
+function toggleParse(){document.getElementById('parsePanel').classList.toggle('open');}
+async function runParse() {
+  const txt=document.getElementById('parseInput').value.trim();if(!txt)return;
+  const st=document.getElementById('parseStatus');st.textContent='Parsing…';
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Extract all fixture entries from the text below. Return ONLY a JSON array, no markdown. Each object: owner, vessel, type (Handysize/Ultramax/Kamsarmax/Capesize), delivery, charterer, rate, period, reported, status (Fixed/Failed/Rumored), ssy (boolean), pnc (boolean), broker, remarks.\n\n${txt}`}]})});
+    const d=await res.json();
+    const raw=d.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(raw);
+    parsed.forEach(e=>{e.id=nextId++;data.push(e);});
+    saveToBin();render();
+    st.textContent=`✓ Added ${parsed.length} entr${parsed.length===1?'y':'ies'}`;
+    document.getElementById('parseInput').value='';
+    setTimeout(()=>st.textContent='',3000);
+  } catch(e){st.textContent='✗ Parse failed';}
+}
+
+// ── Print ─────────────────────────────────────────────────────────────────────
+function showPrint() {
+  const trs=data.map(e=>{
+    const flags=(e.ssy?`<span style="background:#b8860b;color:#fff;padding:1px 5px;border-radius:8px;font-size:8pt;margin-right:2px;">SSY</span>`:'')+(e.pnc?`<span style="background:#555;color:#fff;padding:1px 5px;border-radius:8px;font-size:8pt;">PNC</span>`:'');
+    const rem=[e.remarks,e.broker?`<span style="color:#1a6b6b;">via ${e.broker}</span>`:''].filter(Boolean).join('<br>');
+    return `<tr style="border-bottom:1px solid #dce3ef;">
+      <td style="padding:5px 7px;"><span style="background:${SC[e.status]||'#888'};color:#fff;padding:2px 6px;border-radius:8px;font-size:8pt;white-space:nowrap;">${e.status}</span></td>
+      <td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.reported||''}</td>
+      <td style="padding:5px 7px;"><span style="background:${TC[e.type]||'#333'};color:#fff;padding:2px 6px;border-radius:8px;font-size:8pt;">${e.type}</span></td>
+      <td style="padding:5px 7px;font-weight:600;color:#002060;font-size:8pt;">${e.owner||''}</td>
+      <td style="padding:5px 7px;font-size:8pt;">${e.vessel||''}</td>
+      <td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.delivery||''}</td>
+      <td style="padding:5px 7px;font-size:8pt;">${e.charterer||''}</td>
+      <td style="padding:5px 7px;font-weight:600;font-size:8pt;white-space:nowrap;">${e.rate||''}</td>
+      <td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.period||''}</td>
+      <td style="padding:5px 7px;">${flags}</td>
+      <td style="padding:5px 7px;font-size:8pt;color:#666;font-style:italic;">${rem}</td>
+    </tr>`;
+  }).join('');
+  const stats=[['Total',data.length],['Fixed',data.filter(d=>d.status==='Fixed').length],['Failed',data.filter(d=>d.status==='Failed').length],['Rumored/Bids',data.filter(d=>d.status==='Rumored').length],['SSY Fixtures',data.filter(d=>d.ssy).length]];
+  document.getElementById('pc').innerHTML=`
+    <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+      <div style="background:#002060;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;">
+          <span style="font-size:20px;font-weight:700;letter-spacing:.18em;margin-right:14px;border-right:2px solid rgba(255,255,255,.25);padding-right:14px;">SSY</span>
+          <span style="font-size:13pt;font-weight:700;letter-spacing:.05em;">PROJECTS — FIXTURE INTELLIGENCE</span>
+        </div>
+        <span style="font-size:8pt;opacity:.6;">Generated ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</span>
+      </div>
+      <div style="display:flex;gap:8px;background:#002060;padding:6px 16px;margin-bottom:12px;">
+        ${stats.map(([l,n])=>`<div style="background:rgba(255,255,255,.15);border-radius:4px;padding:4px 12px;color:#fff;text-align:center;"><div style="font-size:15px;font-weight:700;">${n}</div><div style="font-size:8pt;opacity:.7;">${l}</div></div>`).join('')}
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:#002060;color:#fff;">
+          ${['STATUS','REPORTED','TYPE','OWNER','VESSEL','DELIVERY','CHARTERER','RATE','PERIOD','FLAGS','REMARKS'].map(h=>`<th style="padding:6px 7px;text-align:left;font-size:7.5pt;">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${trs}</tbody>
+      </table>
+    </div>`;
+  document.getElementById('po').classList.add('open');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadFromBin();
+</script>
+</body>
+</html>
