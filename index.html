@@ -8,10 +8,20 @@
 :root{--navy:#002060;--teal:#1a6b6b;--gold:#b8860b;--green:#2D7A4F;--red:#A03030;--bg:#f4f6fa;--border:#dce3ef;--text:#1a1a2e;--muted:#6b7a99;--hs:#1a5c8a;--um:#1a6b3a;--km:#7a4a1a;--cp:#4a1a6b;--fail:#8a1a1a;--rumor:#6b6b1a;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;}
+
+/* Password screen */
+.pw-screen{display:flex;position:fixed;inset:0;background:var(--navy);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.pw-screen h2{color:#fff;font-size:22px;letter-spacing:.1em;}
+.pw-screen p{color:rgba(255,255,255,.6);font-size:12px;}
+.pw-box{display:flex;gap:8px;}
+.pw-box input{padding:10px 14px;border-radius:4px;border:none;font-size:14px;width:220px;}
+.pw-box button{padding:10px 20px;background:var(--teal);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;font-weight:600;}
+.pw-error{color:#ff8a8a;font-size:12px;display:none;}
+
 header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
 .wordmark{font-size:22px;font-weight:700;letter-spacing:.18em;margin-right:16px;border-right:2px solid rgba(255,255,255,.25);padding-right:16px;}
 h1{font-size:14px;font-weight:700;letter-spacing:.05em;}
-.sync-status{font-size:11px;opacity:.7;}
+.sync-badge{font-size:11px;opacity:.7;}
 .stats{display:flex;gap:10px;padding:8px 20px;background:var(--navy);}
 .stat{background:rgba(255,255,255,.12);border-radius:4px;padding:5px 14px;color:#fff;text-align:center;}
 .stat-n{font-size:17px;font-weight:700;}.stat-l{font-size:10px;opacity:.7;margin-top:1px;}
@@ -58,12 +68,23 @@ textarea{min-height:55px;resize:vertical;}
 </head>
 <body>
 
+<!-- Password Screen -->
+<div class="pw-screen" id="pwScreen">
+  <h2>SSY PROJECTS</h2>
+  <p>FIXTURE INTELLIGENCE — RESTRICTED ACCESS</p>
+  <div class="pw-box">
+    <input type="password" id="pwInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button onclick="checkPw()">Enter</button>
+  </div>
+  <span class="pw-error" id="pwError">Incorrect password. Please try again.</span>
+</div>
+
 <header>
   <div style="display:flex;align-items:center;">
     <span class="wordmark">SSY</span>
     <h1>PROJECTS — FIXTURE INTELLIGENCE</h1>
   </div>
-  <span class="sync-status" id="syncStatus">Connecting…</span>
+  <span class="sync-badge" id="syncStatus">Connecting…</span>
 </header>
 <div class="stats" id="stats"></div>
 
@@ -82,7 +103,7 @@ textarea{min-height:55px;resize:vertical;}
     <option value="1">SSY only</option>
   </select>
   <button class="btn btn-secondary" onclick="showPrint()">🖨 Print View</button>
-  <button class="btn btn-secondary" onclick="loadFromBin()">↻ Refresh</button>
+  <button class="btn btn-secondary" onclick="loadData()">↻ Refresh</button>
   <button class="btn btn-parse" onclick="toggleParse()">⚡ AI Parse</button>
   <button class="btn btn-primary" onclick="openAdd()">+ Add Entry</button>
   <span class="save-status" id="saveStatus"></span>
@@ -117,7 +138,6 @@ textarea{min-height:55px;resize:vertical;}
   </table>
 </div>
 
-<!-- Print overlay -->
 <div class="po" id="po">
   <div class="ptb">
     <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save as PDF</button>
@@ -127,7 +147,6 @@ textarea{min-height:55px;resize:vertical;}
   <div id="pc"></div>
 </div>
 
-<!-- Add/Edit Modal -->
 <div class="overlay" id="modal">
   <div class="modal">
     <h2 id="mTitle">Add Entry</h2>
@@ -154,16 +173,13 @@ textarea{min-height:55px;resize:vertical;}
 </div>
 
 <script>
-const BIN_ID = '6a292fd3f5f4af5e29d71fdf';
-const API_KEY = '$2a$10$kp1j4dwXa/jq6LT6ut1y4.r063oADJvs8kNnGSlTuGDScSG2B1IMy';
-const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+const API = 'https://script.google.com/macros/s/AKfycbylaFIqQi-pOi8kgHOoxjofWtBUGSiqyzPN0-7gLC6dwfBg4vECNgBal_RKg4dbWNnBzA/exec';
+const TCSS={Handysize:'hs',Ultramax:'um',Kamsarmax:'km',Capesize:'cp'};
+const TORD={Handysize:1,Ultramax:2,Kamsarmax:3,Capesize:4};
+const TC={Handysize:'#1a5c8a',Ultramax:'#1a6b3a',Kamsarmax:'#7a4a1a',Capesize:'#4a1a6b'};
+const SC={Fixed:'#2D7A4F',Failed:'#8a1a1a',Rumored:'#6b6b1a'};
 
-const TCSS = {Handysize:'hs',Ultramax:'um',Kamsarmax:'km',Capesize:'cp'};
-const TORD = {Handysize:1,Ultramax:2,Kamsarmax:3,Capesize:4};
-const TC   = {Handysize:'#1a5c8a',Ultramax:'#1a6b3a',Kamsarmax:'#7a4a1a',Capesize:'#4a1a6b'};
-const SC   = {Fixed:'#2D7A4F',Failed:'#8a1a1a',Rumored:'#6b6b1a'};
-
-const SEED = [
+const SEED=[
   {id:1,owner:"Soki Kisen",vessel:"Imabari-40",type:"Handysize",delivery:"1H 2027",charterer:"DryDel",rate:"USD 14,000 nett",period:"5 years",reported:"April 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
   {id:2,owner:"Fujimaru Kaiun",vessel:"Imabari-40",type:"Handysize",delivery:"1H 2028",charterer:"DryDel",rate:"USD 13,950 nett",period:"5 years",reported:"May 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:""},
   {id:3,owner:"Nissen",vessel:"JNS-40 (×11)",type:"Handysize",delivery:"4Q 2029 onwards",charterer:"Daiichi",rate:"",period:"Long term",reported:"May 2026",status:"Fixed",ssy:false,pnc:false,broker:"",remarks:"Left pocket right pocket — Nissen is a part shareholder of Daiichi."},
@@ -183,118 +199,74 @@ const SEED = [
   {id:17,owner:"Sugahara Kaiun",vessel:"Onomichi 40K",type:"Handysize",delivery:"2H 2028",charterer:"M/Maritime",rate:"USD 13,500",period:"5 years",reported:"",status:"Rumored",ssy:false,pnc:false,broker:"",remarks:"M/Maritime bid — lost out to SSY/UOT deal."},
 ];
 
-let data = [], nextId = 200, sortCol = 'type', sortDir = 1, editId = null;
+let data=[], nextId=200, sortCol='type', sortDir=1, editId=null, PW='';
 
-// ── JSONBin API ───────────────────────────────────────────────────────────────
-async function loadFromBin() {
+// ── Password ──────────────────────────────────────────────────────────────────
+function checkPw() {
+  const val = document.getElementById('pwInput').value;
+  const err = document.getElementById('pwError');
+  if (val === 'SSY2026') {
+    PW = val;
+    document.getElementById('pwScreen').style.display = 'none';
+    loadData();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('pwInput').value = '';
+  }
+}
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+function setSync(msg) { document.getElementById('syncStatus').textContent = msg; }
+
+async function loadData() {
   setSync('Loading…');
   try {
-    // GET uses no auth since bin is public
-    const r = await fetch(BIN_URL + '/latest', {
-      method: 'GET',
-      headers: { 'X-Bin-Meta': 'false' }
-    });
-    if (!r.ok) throw new Error('GET failed: ' + r.status);
+    const r = await fetch(`${API}?password=${encodeURIComponent(PW)}`);
     const j = await r.json();
-    if (j && j.entries && j.entries.length > 0) {
+    if (j.error) throw new Error(j.error);
+    if (j.entries && j.entries.length > 0) {
       data = j.entries;
-      nextId = j.nextId || 200;
+      nextId = Math.max(...data.map(e => parseInt(e.id) || 0)) + 1;
     } else {
-      data = JSON.parse(JSON.stringify(SEED));
-      nextId = 200;
-      await saveToBin();
+      // First load — seed the sheet
+      setSync('Seeding data…');
+      await seedData();
+      return;
     }
     setSync('✓ Synced ' + new Date().toLocaleTimeString());
     render();
   } catch(e) {
     setSync('⚠ ' + e.message);
-    data = JSON.parse(JSON.stringify(SEED));
-    render();
   }
 }
 
-async function saveToBin() {
-  setSync('Saving…');
-  try {
-    const r = await fetch(BIN_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': API_KEY
-      },
-      body: JSON.stringify({ entries: data, nextId })
-    });
-    if (!r.ok) {
-      const txt = await r.text();
-      throw new Error('PUT ' + r.status + ': ' + txt);
-    }
-    const el = document.getElementById('saveStatus');
-    el.textContent = '✓ Saved & synced';
-    setTimeout(() => el.textContent = '', 3000);
-    setSync('✓ Synced ' + new Date().toLocaleTimeString());
-  } catch(e) {
-    setSync('⚠ ' + e.message);
-  }
+async function seedData() {
+  const r = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({password: PW, action: 'seed', entries: SEED})
+  });
+  const j = await r.json();
+  if (j.success) { data = JSON.parse(JSON.stringify(SEED)); nextId = 200; setSync('✓ Seeded'); render(); }
+  else setSync('⚠ Seed failed: ' + j.error);
 }
 
-function setSync(msg) {
-  document.getElementById('syncStatus').textContent = msg;
+async function apiPost(body) {
+  const r = await fetch(API, {method:'POST', body: JSON.stringify({...body, password: PW})});
+  return r.json();
 }
 
 // ── Sort helpers ──────────────────────────────────────────────────────────────
-function dKey(s) {
-  if (!s) return 999999;
-  const mo={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
-  const l=s.toLowerCase(), y=(l.match(/\d{4}/)||['9999'])[0]*1;
-  if(/1h/.test(l))return y*100+1; if(/2h/.test(l))return y*100+2;
-  if(/1q/.test(l))return y*100+1; if(/2q/.test(l))return y*100+4;
-  if(/3q/.test(l))return y*100+7; if(/4q/.test(l))return y*100+10;
-  for(const[n,v]of Object.entries(mo))if(l.includes(n))return y*100+v;
-  return y*100;
-}
-function rKey(s) {
-  if (!s) return 999999;
-  const mo={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
-  const l=s.toLowerCase(), y=(l.match(/\d{4}/)||['9999'])[0]*1;
-  const m=Object.entries(mo).find(([n])=>l.includes(n));
-  return y*100+(m?m[1]:0);
-}
-function gv(e,col) {
-  if(col==='type')return TORD[e.type]||9;
-  if(col==='delivery')return dKey(e.delivery);
-  if(col==='reported')return rKey(e.reported);
-  if(col==='status')return{Fixed:1,Rumored:2,Failed:3}[e.status]||9;
-  return(e[col]||'').toLowerCase();
-}
-function sortBy(col) {
-  sortDir = sortCol===col ? -sortDir : 1; sortCol = col;
-  document.querySelectorAll('th').forEach(t=>{t.classList.remove('sorted');const s=t.querySelector('.si');if(s)s.textContent='↕';});
-  const th=document.getElementById('th-'+col);
-  if(th){th.classList.add('sorted');th.querySelector('.si').textContent=sortDir===1?'↑':'↓';}
-  render();
-}
+function dKey(s){if(!s)return 999999;const mo={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};const l=s.toLowerCase(),y=(l.match(/\d{4}/)||['9999'])[0]*1;if(/1h/.test(l))return y*100+1;if(/2h/.test(l))return y*100+2;if(/1q/.test(l))return y*100+1;if(/2q/.test(l))return y*100+4;if(/3q/.test(l))return y*100+7;if(/4q/.test(l))return y*100+10;for(const[n,v]of Object.entries(mo))if(l.includes(n))return y*100+v;return y*100;}
+function rKey(s){if(!s)return 999999;const mo={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};const l=s.toLowerCase(),y=(l.match(/\d{4}/)||['9999'])[0]*1;const m=Object.entries(mo).find(([n])=>l.includes(n));return y*100+(m?m[1]:0);}
+function gv(e,col){if(col==='type')return TORD[e.type]||9;if(col==='delivery')return dKey(e.delivery);if(col==='reported')return rKey(e.reported);if(col==='status')return{Fixed:1,Rumored:2,Failed:3}[e.status]||9;return(e[col]||'').toLowerCase();}
+function sortBy(col){sortDir=sortCol===col?-sortDir:1;sortCol=col;document.querySelectorAll('th').forEach(t=>{t.classList.remove('sorted');const s=t.querySelector('.si');if(s)s.textContent='↕';});const th=document.getElementById('th-'+col);if(th){th.classList.add('sorted');th.querySelector('.si').textContent=sortDir===1?'↑':'↓';}render();}
 
 // ── Filter & Render ───────────────────────────────────────────────────────────
-function filtered() {
-  const q=document.getElementById('qSearch').value.toLowerCase();
-  const t=document.getElementById('qType').value;
-  const s=document.getElementById('qStatus').value;
-  const sy=document.getElementById('qSSY').value;
-  return data.filter(e=>{
-    if(t&&e.type!==t)return false;
-    if(s&&e.status!==s)return false;
-    if(sy==='1'&&!e.ssy)return false;
-    if(q&&!`${e.owner} ${e.charterer} ${e.vessel} ${e.remarks} ${e.rate}`.toLowerCase().includes(q))return false;
-    return true;
-  });
-}
+function filtered(){const q=document.getElementById('qSearch').value.toLowerCase();const t=document.getElementById('qType').value;const s=document.getElementById('qStatus').value;const sy=document.getElementById('qSSY').value;return data.filter(e=>{if(t&&e.type!==t)return false;if(s&&e.status!==s)return false;if(sy==='1'&&!e.ssy)return false;if(q&&!`${e.owner} ${e.charterer} ${e.vessel} ${e.remarks} ${e.rate}`.toLowerCase().includes(q))return false;return true;});}
 function x(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function render() {
-  const rows=filtered().sort((a,b)=>{
-    const av=gv(a,sortCol),bv=gv(b,sortCol);
-    if(av<bv)return -sortDir; if(av>bv)return sortDir;
-    return dKey(a.delivery)-dKey(b.delivery);
-  });
+
+function render(){
+  const rows=filtered().sort((a,b)=>{const av=gv(a,sortCol),bv=gv(b,sortCol);if(av<bv)return -sortDir;if(av>bv)return sortDir;return dKey(a.delivery)-dKey(b.delivery);});
   const scMap={Fixed:'tag-fixed',Failed:'tag-fail',Rumored:'tag-rumor'};
   const tbody=document.getElementById('tbody');
   if(!rows.length){tbody.innerHTML='<tr><td colspan="12" class="empty">No entries match your filters.</td></tr>';updateStats();return;}
@@ -322,42 +294,26 @@ function render() {
   }).join('');
   updateStats();
 }
-function updateStats() {
-  const c={t:data.length,f:0,x:0,r:0,s:0};
-  data.forEach(e=>{if(e.status==='Fixed')c.f++;if(e.status==='Failed')c.x++;if(e.status==='Rumored')c.r++;if(e.ssy)c.s++;});
-  document.getElementById('stats').innerHTML=
-    [['Total',c.t],['Fixed',c.f],['Failed',c.x],['Rumored/Bids',c.r],['SSY Fixtures',c.s]]
-    .map(([l,n])=>`<div class="stat"><div class="stat-n">${n}</div><div class="stat-l">${l}</div></div>`).join('');
-}
+
+function updateStats(){const c={t:data.length,f:0,x:0,r:0,s:0};data.forEach(e=>{if(e.status==='Fixed')c.f++;if(e.status==='Failed')c.x++;if(e.status==='Rumored')c.r++;if(e.ssy)c.s++;});document.getElementById('stats').innerHTML=[['Total',c.t],['Fixed',c.f],['Failed',c.x],['Rumored/Bids',c.r],['SSY Fixtures',c.s]].map(([l,n])=>`<div class="stat"><div class="stat-n">${n}</div><div class="stat-l">${l}</div></div>`).join('');}
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
-function del(id,btn) {
-  if(btn.dataset.c==='1'){data=data.filter(e=>e.id!==id);saveToBin();render();}
-  else{btn.textContent='Confirm?';btn.dataset.c='1';setTimeout(()=>{btn.textContent='Delete';btn.dataset.c='';},3000);}
+async function del(id, btn) {
+  if (btn.dataset.c==='1') {
+    setSync('Deleting…');
+    const j = await apiPost({action:'delete', id});
+    if (j.success) { data=data.filter(e=>String(e.id)!==String(id)); render(); setSync('✓ Synced '+new Date().toLocaleTimeString()); }
+    else setSync('⚠ '+j.error);
+  } else { btn.textContent='Confirm?'; btn.dataset.c='1'; setTimeout(()=>{btn.textContent='Delete';btn.dataset.c='';},3000); }
 }
-function openAdd() {
-  editId=null;document.getElementById('mTitle').textContent='Add Entry';
-  ['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value='');
-  document.getElementById('f_type').value='Handysize';
-  document.getElementById('f_status').value='Fixed';
-  document.getElementById('f_ssy').value='0';
-  document.getElementById('f_pnc').value='0';
-  document.getElementById('modal').classList.add('open');
-}
-function openEdit(id) {
-  const e=data.find(d=>d.id===id);if(!e)return;
-  editId=id;document.getElementById('mTitle').textContent='Edit Entry';
-  ['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value=e[f]||'');
-  document.getElementById('f_type').value=e.type;
-  document.getElementById('f_status').value=e.status;
-  document.getElementById('f_ssy').value=e.ssy?'1':'0';
-  document.getElementById('f_pnc').value=e.pnc?'1':'0';
-  document.getElementById('modal').classList.add('open');
-}
+
+function openAdd(){editId=null;document.getElementById('mTitle').textContent='Add Entry';['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value='');document.getElementById('f_type').value='Handysize';document.getElementById('f_status').value='Fixed';document.getElementById('f_ssy').value='0';document.getElementById('f_pnc').value='0';document.getElementById('modal').classList.add('open');}
+function openEdit(id){const e=data.find(d=>String(d.id)===String(id));if(!e)return;editId=id;document.getElementById('mTitle').textContent='Edit Entry';['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value=e[f]||'');document.getElementById('f_type').value=e.type;document.getElementById('f_status').value=e.status;document.getElementById('f_ssy').value=e.ssy?'1':'0';document.getElementById('f_pnc').value=e.pnc?'1':'0';document.getElementById('modal').classList.add('open');}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
-function saveEntry() {
+
+async function saveEntry() {
   const e={
-    id:editId||nextId++,
+    id: editId || nextId++,
     owner:document.getElementById('f_owner').value.trim(),
     vessel:document.getElementById('f_vessel').value.trim(),
     type:document.getElementById('f_type').value,
@@ -372,72 +328,47 @@ function saveEntry() {
     broker:document.getElementById('f_broker').value.trim(),
     remarks:document.getElementById('f_remarks').value.trim(),
   };
-  if(editId){const i=data.findIndex(d=>d.id===editId);if(i>-1)data[i]=e;}else data.push(e);
-  closeModal();saveToBin();render();
+  closeModal();
+  setSync('Saving…');
+  const action = editId ? 'update' : 'add';
+  const j = await apiPost({action, entry: e});
+  if (j.success) {
+    if (editId) { const i=data.findIndex(d=>String(d.id)===String(editId)); if(i>-1) data[i]=e; }
+    else data.push(e);
+    render(); setSync('✓ Synced '+new Date().toLocaleTimeString());
+  } else setSync('⚠ '+j.error);
 }
 
 // ── AI Parse ──────────────────────────────────────────────────────────────────
 function toggleParse(){document.getElementById('parsePanel').classList.toggle('open');}
-async function runParse() {
+async function runParse(){
   const txt=document.getElementById('parseInput').value.trim();if(!txt)return;
   const st=document.getElementById('parseStatus');st.textContent='Parsing…';
-  try {
+  try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Extract all fixture entries from the text below. Return ONLY a JSON array, no markdown. Each object: owner, vessel, type (Handysize/Ultramax/Kamsarmax/Capesize), delivery, charterer, rate, period, reported, status (Fixed/Failed/Rumored), ssy (boolean), pnc (boolean), broker, remarks.\n\n${txt}`}]})});
     const d=await res.json();
     const raw=d.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(raw);
-    parsed.forEach(e=>{e.id=nextId++;data.push(e);});
-    saveToBin();render();
-    st.textContent=`✓ Added ${parsed.length} entr${parsed.length===1?'y':'ies'}`;
+    setSync('Saving parsed entries…');
+    for (const e of parsed) {
+      e.id = nextId++;
+      const j = await apiPost({action:'add', entry:e});
+      if (j.success) data.push(e);
+    }
+    render(); st.textContent=`✓ Added ${parsed.length} entr${parsed.length===1?'y':'ies'}`;
     document.getElementById('parseInput').value='';
     setTimeout(()=>st.textContent='',3000);
-  } catch(e){st.textContent='✗ Parse failed';}
+    setSync('✓ Synced '+new Date().toLocaleTimeString());
+  }catch(e){st.textContent='✗ Parse failed';}
 }
 
 // ── Print ─────────────────────────────────────────────────────────────────────
-function showPrint() {
-  const trs=data.map(e=>{
-    const flags=(e.ssy?`<span style="background:#b8860b;color:#fff;padding:1px 5px;border-radius:8px;font-size:8pt;margin-right:2px;">SSY</span>`:'')+(e.pnc?`<span style="background:#555;color:#fff;padding:1px 5px;border-radius:8px;font-size:8pt;">PNC</span>`:'');
-    const rem=[e.remarks,e.broker?`<span style="color:#1a6b6b;">via ${e.broker}</span>`:''].filter(Boolean).join('<br>');
-    return `<tr style="border-bottom:1px solid #dce3ef;">
-      <td style="padding:5px 7px;"><span style="background:${SC[e.status]||'#888'};color:#fff;padding:2px 6px;border-radius:8px;font-size:8pt;white-space:nowrap;">${e.status}</span></td>
-      <td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.reported||''}</td>
-      <td style="padding:5px 7px;"><span style="background:${TC[e.type]||'#333'};color:#fff;padding:2px 6px;border-radius:8px;font-size:8pt;">${e.type}</span></td>
-      <td style="padding:5px 7px;font-weight:600;color:#002060;font-size:8pt;">${e.owner||''}</td>
-      <td style="padding:5px 7px;font-size:8pt;">${e.vessel||''}</td>
-      <td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.delivery||''}</td>
-      <td style="padding:5px 7px;font-size:8pt;">${e.charterer||''}</td>
-      <td style="padding:5px 7px;font-weight:600;font-size:8pt;white-space:nowrap;">${e.rate||''}</td>
-      <td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.period||''}</td>
-      <td style="padding:5px 7px;">${flags}</td>
-      <td style="padding:5px 7px;font-size:8pt;color:#666;font-style:italic;">${rem}</td>
-    </tr>`;
-  }).join('');
+function showPrint(){
+  const trs=data.map(e=>{const flags=(e.ssy?`<span style="background:#b8860b;color:#fff;padding:1px 5px;border-radius:8px;font-size:8pt;margin-right:2px;">SSY</span>`:'')+(e.pnc?`<span style="background:#555;color:#fff;padding:1px 5px;border-radius:8px;font-size:8pt;">PNC</span>`:'');const rem=[e.remarks,e.broker?`<span style="color:#1a6b6b;">via ${e.broker}</span>`:''].filter(Boolean).join('<br>');return `<tr style="border-bottom:1px solid #dce3ef;"><td style="padding:5px 7px;"><span style="background:${SC[e.status]||'#888'};color:#fff;padding:2px 6px;border-radius:8px;font-size:8pt;white-space:nowrap;">${e.status}</span></td><td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.reported||''}</td><td style="padding:5px 7px;"><span style="background:${TC[e.type]||'#333'};color:#fff;padding:2px 6px;border-radius:8px;font-size:8pt;">${e.type}</span></td><td style="padding:5px 7px;font-weight:600;color:#002060;font-size:8pt;">${e.owner||''}</td><td style="padding:5px 7px;font-size:8pt;">${e.vessel||''}</td><td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.delivery||''}</td><td style="padding:5px 7px;font-size:8pt;">${e.charterer||''}</td><td style="padding:5px 7px;font-weight:600;font-size:8pt;white-space:nowrap;">${e.rate||''}</td><td style="padding:5px 7px;font-size:8pt;white-space:nowrap;">${e.period||''}</td><td style="padding:5px 7px;">${flags}</td><td style="padding:5px 7px;font-size:8pt;color:#666;font-style:italic;">${rem}</td></tr>`;}).join('');
   const stats=[['Total',data.length],['Fixed',data.filter(d=>d.status==='Fixed').length],['Failed',data.filter(d=>d.status==='Failed').length],['Rumored/Bids',data.filter(d=>d.status==='Rumored').length],['SSY Fixtures',data.filter(d=>d.ssy).length]];
-  document.getElementById('pc').innerHTML=`
-    <div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;">
-      <div style="background:#002060;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
-        <div style="display:flex;align-items:center;">
-          <span style="font-size:20px;font-weight:700;letter-spacing:.18em;margin-right:14px;border-right:2px solid rgba(255,255,255,.25);padding-right:14px;">SSY</span>
-          <span style="font-size:13pt;font-weight:700;letter-spacing:.05em;">PROJECTS — FIXTURE INTELLIGENCE</span>
-        </div>
-        <span style="font-size:8pt;opacity:.6;">Generated ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</span>
-      </div>
-      <div style="display:flex;gap:8px;background:#002060;padding:6px 16px;margin-bottom:12px;">
-        ${stats.map(([l,n])=>`<div style="background:rgba(255,255,255,.15);border-radius:4px;padding:4px 12px;color:#fff;text-align:center;"><div style="font-size:15px;font-weight:700;">${n}</div><div style="font-size:8pt;opacity:.7;">${l}</div></div>`).join('')}
-      </div>
-      <table style="width:100%;border-collapse:collapse;">
-        <thead><tr style="background:#002060;color:#fff;">
-          ${['STATUS','REPORTED','TYPE','OWNER','VESSEL','DELIVERY','CHARTERER','RATE','PERIOD','FLAGS','REMARKS'].map(h=>`<th style="padding:6px 7px;text-align:left;font-size:7.5pt;">${h}</th>`).join('')}
-        </tr></thead>
-        <tbody>${trs}</tbody>
-      </table>
-    </div>`;
+  document.getElementById('pc').innerHTML=`<div style="-webkit-print-color-adjust:exact;print-color-adjust:exact;"><div style="background:#002060;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;"><div style="display:flex;align-items:center;"><span style="font-size:20px;font-weight:700;letter-spacing:.18em;margin-right:14px;border-right:2px solid rgba(255,255,255,.25);padding-right:14px;">SSY</span><span style="font-size:13pt;font-weight:700;letter-spacing:.05em;">PROJECTS — FIXTURE INTELLIGENCE</span></div><span style="font-size:8pt;opacity:.6;">Generated ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</span></div><div style="display:flex;gap:8px;background:#002060;padding:6px 16px;margin-bottom:12px;">${stats.map(([l,n])=>`<div style="background:rgba(255,255,255,.15);border-radius:4px;padding:4px 12px;color:#fff;text-align:center;"><div style="font-size:15px;font-weight:700;">${n}</div><div style="font-size:8pt;opacity:.7;">${l}</div></div>`).join('')}</div><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#002060;color:#fff;">${['STATUS','REPORTED','TYPE','OWNER','VESSEL','DELIVERY','CHARTERER','RATE','PERIOD','FLAGS','REMARKS'].map(h=>`<th style="padding:6px 7px;text-align:left;font-size:7.5pt;">${h}</th>`).join('')}</tr></thead><tbody>${trs}</tbody></table></div>`;
   document.getElementById('po').classList.add('open');
 }
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-loadFromBin();
 </script>
 </body>
 </html>
