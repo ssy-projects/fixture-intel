@@ -26,13 +26,9 @@ h1{font-size:14px;font-weight:700;letter-spacing:.05em;}
 .toolbar input{width:200px;}
 .btn{padding:6px 14px;border-radius:4px;border:none;cursor:pointer;font-size:12px;font-weight:600;}
 .btn-primary{background:var(--navy);color:#fff;}.btn-secondary{background:var(--bg);color:var(--navy);border:1px solid var(--border);}
-.btn-parse{background:var(--teal);color:#fff;}.btn-danger{background:var(--red);color:#fff;}.btn-sm{padding:3px 8px;font-size:11px;}
+.btn-danger{background:var(--red);color:#fff;}.btn-sm{padding:3px 8px;font-size:11px;}
 .btn-gold{background:var(--gold);color:#fff;}
 .save-status{font-size:11px;color:var(--green);margin-left:auto;}
-.parse-panel{background:#fff;border-bottom:1px solid var(--border);padding:10px 20px;display:none;}
-.parse-panel.open{display:block;}
-.parse-panel textarea{width:100%;min-height:70px;padding:7px;border:1px solid var(--border);border-radius:4px;font-size:12px;margin-bottom:6px;resize:vertical;}
-.parse-info{font-size:11px;color:var(--muted);font-style:italic;margin-left:8px;}
 .table-wrap{padding:14px 20px;overflow-x:auto;}
 table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);font-size:12px;}
 thead tr{background:var(--navy);color:#fff;}
@@ -45,7 +41,7 @@ td{padding:7px 10px;vertical-align:top;line-height:1.4;}
 .tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;color:#fff;margin:1px 1px 1px 0;white-space:nowrap;}
 .tag-hs{background:var(--hs)}.tag-um{background:var(--um)}.tag-km{background:var(--km)}.tag-cp{background:var(--cp)}
 .tag-fail{background:var(--fail)}.tag-rumor{background:var(--rumor)}.tag-fixed{background:var(--green)}
-.tag-ssy{background:var(--gold)}.tag-pnc{background:#555}
+.tag-ssy{background:var(--gold)}.tag-pnc{background:#8a1a1a;color:#fff}.tag-nfd{background:#fbbf24;color:#7f1d1d;}
 .ac{display:flex;gap:4px;}.empty{text-align:center;color:var(--muted);padding:30px;}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,40,.5);z-index:100;align-items:center;justify-content:center;}
 .overlay.open{display:flex;}
@@ -77,7 +73,7 @@ textarea{min-height:55px;resize:vertical;}
 
 <header>
   <div style="display:flex;align-items:center;">
-    <span class="wordmark">SSY</span>
+    <span class="wordmark" style="font-family:'Times New Roman',serif;font-weight:400;font-style:normal;font-size:28px;">SSY</span>
     <h1>PROJECTS — FIXTURE INTELLIGENCE</h1>
   </div>
   <span id="syncStatus" style="font-size:11px;opacity:.7;">Connecting…</span>
@@ -98,21 +94,11 @@ textarea{min-height:55px;resize:vertical;}
     <option value="">All fixtures</option>
     <option value="1">SSY only</option>
   </select>
-  <button class="btn btn-secondary" onclick="loadData()">↻ Refresh</button>
-  <button class="btn btn-secondary" id="selectBtn" onclick="toggleSelectMode()">👁 Select for Print</button>
-  <button class="btn btn-secondary" onclick="showPrint()">🖨 Print View</button>
-  <button class="btn btn-parse" onclick="toggleParse()">⚡ AI Parse</button>
-  <button class="btn btn-primary" onclick="openAdd()">+ Add Entry</button>
+  <button class="btn" style="background:#e8f0fe;color:#1a56db;border:1px solid #c3d3f7;" onclick="loadData()">↻ Refresh</button>
+  <button class="btn" style="background:#1a56db;color:#fff;" id="selectBtn" onclick="toggleSelectMode()">👁 Select for Print</button>
+  <button class="btn" style="background:#1e3a8a;color:#fff;" onclick="showPrint()">🖨 Print View</button>
+  <button class="btn" style="background:#002060;color:#fff;" onclick="openAdd()">+ Add Entry</button>
   <span class="save-status" id="saveStatus"></span>
-</div>
-
-<div class="parse-panel" id="parsePanel">
-  <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Paste raw fixture text — Claude will extract structured entries:</label>
-  <textarea id="parseInput" placeholder="e.g. Owners: XYZ Kisen – Newbuilding TESS64 | Delivery 2H 2027 | Fixed to ABC at USD 15,000 for 5 years…"></textarea>
-  <div style="display:flex;align-items:center;">
-    <button class="btn btn-parse" onclick="runParse()">Parse with AI</button>
-    <span class="parse-info" id="parseStatus"></span>
-  </div>
 </div>
 
 <div class="table-wrap">
@@ -155,10 +141,11 @@ textarea{min-height:55px;resize:vertical;}
       <div><label>Charterer</label><input type="text" id="f_charterer"></div>
       <div><label>Rate</label><input type="text" id="f_rate"></div>
       <div><label>Period</label><input type="text" id="f_period"></div>
-      <div><label>Reported (DD/MMM/YYYY)</label><input type="text" id="f_reported" placeholder="e.g. 01/Apr/2026"></div>
+      <div><label>Reported</label><input type="date" id="f_reported"></div>
       <div><label>Status</label><select id="f_status"><option>Fixed</option><option>Failed</option><option>Rumored</option></select></div>
       <div><label>SSY Fixture?</label><select id="f_ssy"><option value="0">No</option><option value="1">Yes</option></select></div>
       <div><label>PNC?</label><select id="f_pnc"><option value="0">No</option><option value="1">Yes</option></select></div>
+      <div><label>NFD?</label><select id="f_nfd"><option value="0">No</option><option value="1">Yes</option></select></div>
       <div><label>Broker / Via</label><input type="text" id="f_broker"></div>
       <div class="ff"><label>Remarks</label><textarea id="f_remarks"></textarea></div>
     </div>
@@ -199,14 +186,12 @@ const SEED=[
 let data=[], nextId=200, sortCol='type', sortDir=1, editId=null, PW='';
 let selectMode=false, hiddenIds=new Set();
 
-// ── Password ──────────────────────────────────────────────────────────────────
 function checkPw(){
   const val=document.getElementById('pwInput').value;
   if(val==='SSY2026'){PW=val;document.getElementById('pwScreen').style.display='none';loadData();}
   else{document.getElementById('pwError').style.display='block';document.getElementById('pwInput').value='';}
 }
 
-// ── Select for Print ──────────────────────────────────────────────────────────
 function toggleSelectMode(){
   selectMode=!selectMode;
   const btn=document.getElementById('selectBtn');
@@ -216,12 +201,10 @@ function toggleSelectMode(){
 }
 function toggleHide(id){
   const sid=String(id);
-  if(hiddenIds.has(sid))hiddenIds.delete(sid);
-  else hiddenIds.add(sid);
+  if(hiddenIds.has(sid))hiddenIds.delete(sid);else hiddenIds.add(sid);
   render();
 }
 
-// ── API ───────────────────────────────────────────────────────────────────────
 function setSync(msg){document.getElementById('syncStatus').textContent=msg;}
 
 async function loadData(){
@@ -234,8 +217,7 @@ async function loadData(){
       data=j.entries;
       nextId=Math.max(...data.map(e=>parseInt(e.id)||0))+1;
     } else {
-      setSync('Seeding…');
-      await seedData(); return;
+      setSync('Seeding…'); await seedData(); return;
     }
     setSync('✓ Synced '+new Date().toLocaleTimeString());
     render();
@@ -254,7 +236,6 @@ async function apiPost(body){
   return r.json();
 }
 
-// ── Sort helpers ──────────────────────────────────────────────────────────────
 function dKey(s){if(!s)return 999999;const mo={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};const l=s.toLowerCase(),y=(l.match(/\d{4}/)||['9999'])[0]*1;if(/1h/.test(l))return y*100+1;if(/2h/.test(l))return y*100+2;if(/1q/.test(l))return y*100+1;if(/2q/.test(l))return y*100+4;if(/3q/.test(l))return y*100+7;if(/4q/.test(l))return y*100+10;for(const[n,v]of Object.entries(mo))if(l.includes(n))return y*100+v;return y*100;}
 
 function rKey(s){
@@ -268,10 +249,8 @@ function rKey(s){
 }
 
 function gv(e,col){if(col==='type')return TORD[e.type]||9;if(col==='delivery')return dKey(e.delivery);if(col==='reported')return rKey(e.reported);if(col==='status')return{Fixed:1,Rumored:2,Failed:3}[e.status]||9;return(e[col]||'').toLowerCase();}
-
 function sortBy(col){sortDir=sortCol===col?-sortDir:1;sortCol=col;document.querySelectorAll('th').forEach(t=>{t.classList.remove('sorted');const s=t.querySelector('.si');if(s)s.textContent='↕';});const th=document.getElementById('th-'+col);if(th){th.classList.add('sorted');th.querySelector('.si').textContent=sortDir===1?'↑':'↓';}render();}
 
-// ── Filter & Render ───────────────────────────────────────────────────────────
 function filtered(){const q=document.getElementById('qSearch').value.toLowerCase();const t=document.getElementById('qType').value;const s=document.getElementById('qStatus').value;const sy=document.getElementById('qSSY').value;return data.filter(e=>{if(t&&e.type!==t)return false;if(s&&e.status!==s)return false;if(sy==='1'&&!e.ssy)return false;if(q&&!`${e.owner} ${e.charterer} ${e.vessel} ${e.remarks} ${e.rate}`.toLowerCase().includes(q))return false;return true;});}
 function x(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -282,12 +261,12 @@ function render(){
   if(!rows.length){tbody.innerHTML='<tr><td colspan="12" class="empty">No entries match your filters.</td></tr>';updateStats();return;}
   tbody.innerHTML=rows.map(e=>{
     const tc=TCSS[e.type]||'hs';
-    const flags=(e.ssy?'<span class="tag tag-ssy">SSY</span>':'')+(e.pnc?'<span class="tag tag-pnc">PNC</span>':'');
+    const flags=(e.ssy?'<span class="tag tag-ssy">SSY</span>':'')+(e.pnc?'<span class="tag tag-pnc">PNC</span>':'')+(e.nfd?'<span class="tag tag-nfd">NFD</span>':'');
     const rem=x(e.remarks)+(e.broker?`<br><span style="color:var(--teal);font-style:normal;">via ${x(e.broker)}</span>`:'');
     const hidden=hiddenIds.has(String(e.id));
     const actionBtns=selectMode
-      ? `<button class="btn btn-sm" style="background:${hidden?'var(--green)':'var(--red)'};color:#fff;" onclick="toggleHide(${e.id})">${hidden?'✓ Include':'✗ Exclude'}</button>`
-      : `<button class="btn btn-secondary btn-sm" onclick="openEdit(${e.id})">Edit</button><button class="btn btn-danger btn-sm" onclick="del(${e.id},this)">Delete</button>`;
+      ?`<button class="btn btn-sm" style="background:${hidden?'var(--green)':'var(--red)'};color:#fff;" onclick="toggleHide(${e.id})">${hidden?'✓ Include':'✗ Exclude'}</button>`
+      :`<button class="btn btn-secondary btn-sm" onclick="openEdit(${e.id})">Edit</button><button class="btn btn-danger btn-sm" onclick="del(${e.id},this)">Delete</button>`;
     return `<tr style="${hidden?'opacity:0.3;':''}">
       <td><span class="tag ${scMap[e.status]||''}">${e.status}</span></td>
       <td style="white-space:nowrap;">${x(e.reported)}</td>
@@ -308,44 +287,46 @@ function render(){
 
 function updateStats(){const c={t:data.length,f:0,x:0,r:0,s:0};data.forEach(e=>{if(e.status==='Fixed')c.f++;if(e.status==='Failed')c.x++;if(e.status==='Rumored')c.r++;if(e.ssy)c.s++;});document.getElementById('stats').innerHTML=[['Total',c.t],['Fixed',c.f],['Failed',c.x],['Rumored/Bids',c.r],['SSY Fixtures',c.s]].map(([l,n])=>`<div class="stat"><div class="stat-n">${n}</div><div class="stat-l">${l}</div></div>`).join('');}
 
-// ── CRUD ──────────────────────────────────────────────────────────────────────
 async function del(id,btn){
   if(btn.dataset.c==='1'){setSync('Deleting…');const j=await apiPost({action:'delete',id});if(j.success){data=data.filter(e=>String(e.id)!==String(id));render();setSync('✓ Synced '+new Date().toLocaleTimeString());}else setSync('⚠ '+j.error);}
   else{btn.textContent='Confirm?';btn.dataset.c='1';setTimeout(()=>{btn.textContent='Delete';btn.dataset.c='';},3000);}
 }
 
 function openAdd(){editId=null;document.getElementById('mTitle').textContent='Add Entry';['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value='');document.getElementById('f_type').value='Handysize';document.getElementById('f_status').value='Fixed';document.getElementById('f_ssy').value='0';document.getElementById('f_pnc').value='0';document.getElementById('modal').classList.add('open');}
-function openEdit(id){const e=data.find(d=>String(d.id)===String(id));if(!e)return;editId=id;document.getElementById('mTitle').textContent='Edit Entry';['owner','vessel','delivery','charterer','rate','period','reported','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value=e[f]||'');document.getElementById('f_type').value=e.type;document.getElementById('f_status').value=e.status;document.getElementById('f_ssy').value=e.ssy?'1':'0';document.getElementById('f_pnc').value=e.pnc?'1':'0';document.getElementById('modal').classList.add('open');}
+function openEdit(id){
+  const e=data.find(d=>String(d.id)===String(id));if(!e)return;
+  editId=id;document.getElementById('mTitle').textContent='Edit Entry';
+  ['owner','vessel','delivery','charterer','rate','period','broker','remarks'].forEach(f=>document.getElementById('f_'+f).value=e[f]||'');
+  document.getElementById('f_type').value=e.type;
+  document.getElementById('f_status').value=e.status;
+  document.getElementById('f_ssy').value=e.ssy?'1':'0';
+  document.getElementById('f_pnc').value=e.pnc?'1':'0';
+  document.getElementById('f_nfd').value=e.nfd?'1':'0';
+  // Convert DD/MMM/YYYY back to YYYY-MM-DD for the date input
+  if(e.reported){
+    const mo={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+    const m=e.reported.match(/(\d{2})\/([A-Za-z]{3})\/(\d{4})/);
+    document.getElementById('f_reported').value=m?`${m[3]}-${mo[m[2]]}-${m[1]}`:'';
+  } else {
+    document.getElementById('f_reported').value='';
+  }
+  document.getElementById('modal').classList.add('open');
+}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 
 async function saveEntry(){
-  const e={id:editId||nextId++,owner:document.getElementById('f_owner').value.trim(),vessel:document.getElementById('f_vessel').value.trim(),type:document.getElementById('f_type').value,delivery:document.getElementById('f_delivery').value.trim(),charterer:document.getElementById('f_charterer').value.trim(),rate:document.getElementById('f_rate').value.trim(),period:document.getElementById('f_period').value.trim(),reported:document.getElementById('f_reported').value.trim(),status:document.getElementById('f_status').value,ssy:document.getElementById('f_ssy').value==='1',pnc:document.getElementById('f_pnc').value==='1',broker:document.getElementById('f_broker').value.trim(),remarks:document.getElementById('f_remarks').value.trim()};
+  const reportedRaw = document.getElementById('f_reported').value;
+  const reportedFmt = reportedRaw ? (d => {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${String(d.getUTCDate()).padStart(2,'0')}/${months[d.getUTCMonth()]}/${d.getUTCFullYear()}`;
+  })(new Date(reportedRaw)) : '';
+  const e={id:editId||nextId++,owner:document.getElementById('f_owner').value.trim(),vessel:document.getElementById('f_vessel').value.trim(),type:document.getElementById('f_type').value,delivery:document.getElementById('f_delivery').value.trim(),charterer:document.getElementById('f_charterer').value.trim(),rate:document.getElementById('f_rate').value.trim(),period:document.getElementById('f_period').value.trim(),reported:reportedFmt,status:document.getElementById('f_status').value,ssy:document.getElementById('f_ssy').value==='1',pnc:document.getElementById('f_pnc').value==='1',nfd:document.getElementById('f_nfd').value==='1',broker:document.getElementById('f_broker').value.trim(),remarks:document.getElementById('f_remarks').value.trim()};
   closeModal();setSync('Saving…');
   const j=await apiPost({action:editId?'update':'add',entry:e});
   if(j.success){if(editId){const i=data.findIndex(d=>String(d.id)===String(editId));if(i>-1)data[i]=e;}else data.push(e);render();setSync('✓ Synced '+new Date().toLocaleTimeString());}
   else setSync('⚠ '+j.error);
 }
 
-// ── AI Parse ──────────────────────────────────────────────────────────────────
-function toggleParse(){document.getElementById('parsePanel').classList.toggle('open');}
-async function runParse(){
-  const txt=document.getElementById('parseInput').value.trim();if(!txt)return;
-  const st=document.getElementById('parseStatus');st.textContent='Parsing…';
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Extract all fixture entries from the text below. Return ONLY a JSON array, no markdown. Each object: owner, vessel, type (Handysize/Ultramax/Kamsarmax/Capesize), delivery, charterer, rate, period, reported (DD/MMM/YYYY format), status (Fixed/Failed/Rumored), ssy (boolean), pnc (boolean), broker, remarks.\n\n${txt}`}]})});
-    const d=await res.json();
-    const raw=d.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(raw);
-    setSync('Saving parsed entries…');
-    for(const e of parsed){e.id=nextId++;const j=await apiPost({action:'add',entry:e});if(j.success)data.push(e);}
-    render();st.textContent=`✓ Added ${parsed.length} entr${parsed.length===1?'y':'ies'}`;
-    document.getElementById('parseInput').value='';
-    setTimeout(()=>st.textContent='',3000);
-    setSync('✓ Synced '+new Date().toLocaleTimeString());
-  }catch(e){st.textContent='✗ Parse failed';}
-}
-
-// ── Print ─────────────────────────────────────────────────────────────────────
 function showPrint(){
   const printData=data.filter(e=>!hiddenIds.has(String(e.id)));
   const trs=printData.map(e=>{
