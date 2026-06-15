@@ -214,7 +214,12 @@ async function loadData(){
     const j=await r.json();
     if(j.error)throw new Error(j.error);
     if(j.entries&&j.entries.length>0){
-      data=j.entries;
+      data=j.entries.map(e=>({
+        ...e,
+        ssy: e.ssy===true||e.ssy==='true'||e.ssy==='TRUE'||e.ssy==='1',
+        pnc: e.pnc===true||e.pnc==='true'||e.pnc==='TRUE'||e.pnc==='1',
+        nfd: e.nfd===true||e.nfd==='true'||e.nfd==='TRUE'||e.nfd==='1',
+      }));
       nextId=Math.max(...data.map(e=>parseInt(e.id)||0))+1;
     } else {
       setSync('Seeding…'); await seedData(); return;
