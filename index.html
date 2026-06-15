@@ -101,7 +101,6 @@ textarea{min-height:55px;resize:vertical;}
   <span class="save-status" id="saveStatus"></span>
 </div>
 
-<pre id="debugOut" style="background:#1e293b;color:#86efac;font-size:11px;padding:8px 20px;white-space:pre-wrap;"></pre>
 <div class="table-wrap">
   <table>
     <thead><tr>
@@ -219,12 +218,6 @@ async function loadData(){
     if(j.entries&&j.entries.length>0){
       data=j.entries.map(e=>({...e,ssy:toBool(e.ssy),pnc:toBool(e.pnc),nfd:toBool(e.nfd)}));
       nextId=Math.max(...data.map(e=>parseInt(e.id)||0))+1;
-      // DEBUG
-      const dbg=document.getElementById('debugOut');
-      if(dbg){
-        const colInfo=j.debug?`ssy col:${j.debug.ssyIdx} pnc col:${j.debug.pncIdx} nfd col:${j.debug.nfdIdx}`:'no debug';
-        dbg.textContent=colInfo+'\n'+data.slice(0,5).map(e=>`id:${e.id} ssy:${e.ssy}(${typeof e.ssy}) pnc:${e.pnc}(${typeof e.pnc}) nfd:${e.nfd}(${typeof e.nfd})`).join('\n');
-      }
     } else {
       setSync('Seeding…'); await seedData(); return;
     }
