@@ -101,7 +101,6 @@ textarea{min-height:55px;resize:vertical;}
   <span class="save-status" id="saveStatus"></span>
 </div>
 
-<pre id="debugOut" style="background:#1e293b;color:#86efac;font-size:11px;padding:8px 20px;white-space:pre-wrap;display:block;"></pre>
 <div class="table-wrap">
   <table>
     <thead><tr>
@@ -208,7 +207,7 @@ function toggleHide(id){
 
 function setSync(msg){document.getElementById('syncStatus').textContent=msg;}
 
-function toBool(v){ return v===true||v===1||String(v).toLowerCase().trim()==='true'||String(v).trim()==='1'; }
+function toBool(v){ if(v===true||v===1)return true; if(typeof v==='string'){const s=v.toLowerCase().trim();return s==='true'||s==='1'||s==='yes';} return false; }
 
 async function loadData(){
   setSync('Loading…');
@@ -223,9 +222,6 @@ async function loadData(){
       setSync('Seeding…'); await seedData(); return;
     }
     setSync('✓ Synced '+new Date().toLocaleTimeString());
-    // DEBUG: show raw flag values for first 5 entries
-    const debugEl = document.getElementById('debugOut');
-    if(debugEl) debugEl.textContent = data.slice(0,5).map(e=>`id:${e.id} ssy:${e.ssy}(${typeof e.ssy}) pnc:${e.pnc}(${typeof e.pnc}) nfd:${e.nfd}(${typeof e.nfd})`).join('\n');
     render();
   }catch(e){setSync('⚠ '+e.message);}
 }
@@ -267,7 +263,7 @@ function render(){
   if(!rows.length){tbody.innerHTML='<tr><td colspan="12" class="empty">No entries match your filters.</td></tr>';updateStats();return;}
   tbody.innerHTML=rows.map(e=>{
     const tc=TCSS[e.type]||'hs';
-    const flags=(e.ssy?'<span class="tag tag-ssy">SSY</span>':'')+(e.pnc?'<span class="tag tag-pnc">PNC</span>':'')+(e.nfd?'<span class="tag tag-nfd">NFD</span>':'');
+    const flags=(toBool(e.ssy)?'<span class="tag tag-ssy">SSY</span>':'')+(toBool(e.pnc)?'<span class="tag tag-pnc">PNC</span>':'')+(toBool(e.nfd)?'<span class="tag tag-nfd">NFD</span>':'');
     const rem=x(e.remarks)+(e.broker?`<br><span style="color:var(--teal);font-style:normal;">via ${x(e.broker)}</span>`:'');
     const hidden=hiddenIds.has(String(e.id));
     const actionBtns=selectMode
