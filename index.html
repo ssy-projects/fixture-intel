@@ -216,9 +216,9 @@ async function loadData(){
     if(j.entries&&j.entries.length>0){
       data=j.entries.map(e=>({
         ...e,
-        ssy: e.ssy===true||e.ssy==='true'||e.ssy==='TRUE'||e.ssy==='1',
-        pnc: e.pnc===true||e.pnc==='true'||e.pnc==='TRUE'||e.pnc==='1',
-        nfd: e.nfd===true||e.nfd==='true'||e.nfd==='TRUE'||e.nfd==='1',
+        ssy: e.ssy==='1'||e.ssy===true||e.ssy==='true'||e.ssy==='TRUE',
+        pnc: e.pnc==='1'||e.pnc===true||e.pnc==='true'||e.pnc==='TRUE',
+        nfd: e.nfd==='1'||e.nfd===true||e.nfd==='true'||e.nfd==='TRUE',
       }));
       nextId=Math.max(...data.map(e=>parseInt(e.id)||0))+1;
     } else {
