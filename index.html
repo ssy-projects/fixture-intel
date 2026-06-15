@@ -101,6 +101,7 @@ textarea{min-height:55px;resize:vertical;}
   <span class="save-status" id="saveStatus"></span>
 </div>
 
+<pre id="debugOut" style="background:#1e293b;color:#86efac;font-size:11px;padding:8px 20px;white-space:pre-wrap;display:block;"></pre>
 <div class="table-wrap">
   <table>
     <thead><tr>
@@ -222,6 +223,9 @@ async function loadData(){
       setSync('Seeding…'); await seedData(); return;
     }
     setSync('✓ Synced '+new Date().toLocaleTimeString());
+    // DEBUG: show raw flag values for first 5 entries
+    const debugEl = document.getElementById('debugOut');
+    if(debugEl) debugEl.textContent = data.slice(0,5).map(e=>`id:${e.id} ssy:${e.ssy}(${typeof e.ssy}) pnc:${e.pnc}(${typeof e.pnc}) nfd:${e.nfd}(${typeof e.nfd})`).join('\n');
     render();
   }catch(e){setSync('⚠ '+e.message);}
 }
