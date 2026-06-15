@@ -207,6 +207,8 @@ function toggleHide(id){
 
 function setSync(msg){document.getElementById('syncStatus').textContent=msg;}
 
+function toBool(v){ return v===true||v===1||String(v).toLowerCase().trim()==='true'||String(v).trim()==='1'; }
+
 async function loadData(){
   setSync('Loading…');
   try{
@@ -214,12 +216,7 @@ async function loadData(){
     const j=await r.json();
     if(j.error)throw new Error(j.error);
     if(j.entries&&j.entries.length>0){
-      data=j.entries.map(e=>({
-        ...e,
-        ssy: e.ssy==='1'||e.ssy===true||e.ssy==='true'||e.ssy==='TRUE',
-        pnc: e.pnc==='1'||e.pnc===true||e.pnc==='true'||e.pnc==='TRUE',
-        nfd: e.nfd==='1'||e.nfd===true||e.nfd==='true'||e.nfd==='TRUE',
-      }));
+      data=j.entries.map(e=>({...e,ssy:toBool(e.ssy),pnc:toBool(e.pnc),nfd:toBool(e.nfd)}));
       nextId=Math.max(...data.map(e=>parseInt(e.id)||0))+1;
     } else {
       setSync('Seeding…'); await seedData(); return;
