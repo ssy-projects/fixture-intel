@@ -39,7 +39,7 @@ tbody tr{border-bottom:1px solid var(--border);}tbody tr:hover{background:#f0f4f
 td{padding:7px 10px;vertical-align:top;line-height:1.4;}
 .oc{font-weight:600;color:var(--navy);}.rc{font-size:11px;color:var(--muted);font-style:italic;max-width:200px;}
 .tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;color:#fff;margin:1px 1px 1px 0;white-space:nowrap;}
-.tag-hs{background:var(--hs)}.tag-um{background:var(--um)}.tag-km{background:var(--km)}.tag-cp{background:var(--cp)}
+.tag-hs{background:var(--hs)}.tag-um{background:var(--um)}.tag-km{background:var(--km)}.tag-cp{background:var(--cp)}.tag-mr2{background:#0e7490}.tag-j19{background:#6d28d9}
 .tag-fail{background:var(--fail)}.tag-rumor{background:var(--rumor)}.tag-fixed{background:var(--green)}
 .tag-ssy{background:var(--gold)}.tag-pnc{background:#8a1a1a;color:#fff}.tag-nfd{background:#fbbf24;color:#7f1d1d;}
 .ac{display:flex;gap:4px;}.empty{text-align:center;color:var(--muted);padding:30px;}
@@ -84,7 +84,7 @@ textarea{min-height:55px;resize:vertical;}
   <input type="text" id="qSearch" placeholder="Search owner, charterer, vessel…" oninput="render()">
   <select id="qType" onchange="render()">
     <option value="">All vessel types</option>
-    <option>Handysize</option><option>Ultramax</option><option>Kamsarmax</option><option>Capesize</option>
+    <option>Handysize</option><option>Ultramax</option><option>Kamsarmax</option><option>Capesize</option><option>MR2</option><option>J19</option>
   </select>
   <select id="qStatus" onchange="render()">
     <option value="">All statuses</option>
@@ -135,7 +135,7 @@ textarea{min-height:55px;resize:vertical;}
     <h2 id="mTitle">Add Entry</h2>
     <div class="fg">
       <div><label>Owner</label><input type="text" id="f_owner"></div>
-      <div><label>Vessel Type</label><select id="f_type"><option>Handysize</option><option>Ultramax</option><option>Kamsarmax</option><option>Capesize</option></select></div>
+      <div><label>Vessel Type</label><select id="f_type"><option>Handysize</option><option>Ultramax</option><option>Kamsarmax</option><option>Capesize</option><option>MR2</option><option>J19</option></select></div>
       <div><label>Vessel Spec</label><input type="text" id="f_vessel"></div>
       <div><label>Delivery</label><input type="text" id="f_delivery"></div>
       <div><label>Charterer</label><input type="text" id="f_charterer"></div>
@@ -158,9 +158,9 @@ textarea{min-height:55px;resize:vertical;}
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbylaFIqQi-pOi8kgHOoxjofWtBUGSiqyzPN0-7gLC6dwfBg4vECNgBal_RKg4dbWNnBzA/exec';
-const TCSS={Handysize:'hs',Ultramax:'um',Kamsarmax:'km',Capesize:'cp'};
-const TORD={Handysize:1,Ultramax:2,Kamsarmax:3,Capesize:4};
-const TC={Handysize:'#1a5c8a',Ultramax:'#1a6b3a',Kamsarmax:'#7a4a1a',Capesize:'#4a1a6b'};
+const TCSS={Handysize:'hs',Ultramax:'um',Kamsarmax:'km',Capesize:'cp',MR2:'mr2',J19:'j19'};
+const TORD={Handysize:1,Ultramax:2,Kamsarmax:3,Capesize:4,MR2:5,J19:6};
+const TC={Handysize:'#1a5c8a',Ultramax:'#1a6b3a',Kamsarmax:'#7a4a1a',Capesize:'#4a1a6b',MR2:'#0e7490',J19:'#6d28d9'};
 const SC={Fixed:'#2D7A4F',Failed:'#8a1a1a',Rumored:'#6b6b1a'};
 
 const SEED=[
